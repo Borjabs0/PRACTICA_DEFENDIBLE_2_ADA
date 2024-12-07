@@ -20,6 +20,9 @@ public class MySQLConnection {
                 PoiMySQLUtils.getMysqlDbHost(),   
                 PoiMySQLUtils.getMysqlDbPort(),   
                 PoiMySQLUtils.getMysqlDbName());  
+            
+            LOGGER.info("Attempting to connect to MySQL with URL: {}", url);  
+            LOGGER.info("Using user: {}", PoiMySQLUtils.getMysqlDbUser());
 
             connection = DriverManager.getConnection(url,   
             		PoiMySQLUtils.getMysqlDbUser(),   

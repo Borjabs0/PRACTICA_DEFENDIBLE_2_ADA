@@ -31,20 +31,19 @@ public class PoiMongoUtils {
 	public static final String DATE_FORMAT = "yyyy-mm-dd";
 
 	// Configuracion preedeterminada y propiedades clave
-	private static final String CONFIG_FILE_PATH = "src" + File.separator + "main" + File.separator + "resources"
-			+ File.separator + "mongo_connection_properties" + File.separator + "mongo_data_connection.properties";
+	private static final String CONFIG_FILE_PATH = "mongo_connection_properties/mongo_data_connection.properties";
 
 	private static final String DEFAULT_DB_HOST = "localhost";
 	private static final int DEFAULT_DB_PORT = 27017;
-	private static final String DEFAULT_DB_NAME = "poi_db";
-	private static final String DEFAULT_DB_USER = "borja";
-	private static final String DEFAULT_DB_PASSWORD = "bbgjrgnrgk.rr";
+	private static final String DEFAULT_DB_NAME = "root";
+	private static final String DEFAULT_DB_USER = "root";
+	private static final String DEFAULT_DB_PASSWORD = "1234";
 
-	private static final String DB_HOST_KEY = "db.host";
-	private static final String DB_PORT_KEY = "db.port";
-	private static final String DB_NAME_KEY = "db.name";
-	private static final String DB_USER_KEY = "db.user";
-	private static final String DB_PASSWORD_KEY = "db.password";
+	private static final String DB_HOST_KEY = "mongo.db.host";
+	private static final String DB_PORT_KEY = "mongo.db.port";
+	private static final String DB_NAME_KEY = "mongo.db.name";
+	private static final String DB_USER_KEY = "mongo.db.user";
+	private static final String DB_PASSWORD_KEY = "mongo.db.password";
 
 	// Variables para almacenar los valores actuales de configuración
 	private static String dbHost = DEFAULT_DB_HOST;
@@ -102,6 +101,9 @@ public class PoiMongoUtils {
 	static {
 		Properties properties = new Properties();
 		try (InputStream input = PoiMongoUtils.class.getClassLoader().getResourceAsStream(CONFIG_FILE_PATH)) {
+			if (input == null) {
+				throw new IOException("Unable to find configuration file: " + CONFIG_FILE_PATH);
+			}
 			properties.load(input);
 
 			dbHost = properties.getProperty(DB_HOST_KEY, DEFAULT_DB_HOST);

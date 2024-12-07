@@ -26,7 +26,7 @@ public class PoiMongoDAO implements IDAO {
         private static final String MONGODB__POI__PROPERTYNAME__DESCRIPTION = "description";
         private static final String MONGODB__POI__PROPERTYNAME__UPDATED_DATE = "updatedDate";
 
-        private static final String COLLECTION_NAME = "pois";
+        private static final String COLLECTION_NAME = "POIs";
     }
 
     private final MongoCollection<Document> collection;
