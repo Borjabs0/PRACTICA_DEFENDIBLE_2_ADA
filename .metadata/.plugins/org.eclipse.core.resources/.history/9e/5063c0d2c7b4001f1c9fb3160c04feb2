@@ -1,0 +1,75 @@
+package managers;
+
+
+
+import java.util.List;
+
+import interfaces.IDAO;
+import models.POI;
+
+
+public class POIManagment{
+	private static IDAO sourceDAO;
+    private static IDAO targetDAO;
+    
+    public POIManagment(IDAO sourceDAO, IDAO targetDAO) {
+    	POIManagment.sourceDAO = sourceDAO;
+    	POIManagment.targetDAO = targetDAO;
+	}
+    
+
+	public static boolean synchronizeDatabases() {
+		try {
+			// Obtiene todos los POIs desde la base de datos fuente
+			List<POI> sourcePois = sourceDAO.listAllPois();
+			
+			//Itera sobre cada POI para sincronizarlo con la base de datos destino
+			for(POI poi : sourcePois) {
+                // Verifica si el POI ya existe en la base de datos destino
+				POI existingPoi = targetDAO.listByID(poi.getId());
+				
+				if (existingPoi == null) {
+					//Si no existe agregar poi al destino
+					targetDAO.addPoi(poi);
+				}else {
+					//Si existe, actualzar el POI con los datos más recientes
+					targetDAO.updateById(poi.getId(), poi);
+				}
+			}
+			return true;
+		} catch (Exception e) {
+			 // Maneja cualquier excepción y devuelve false en caso de error
+            System.err.println("Error during synchronization: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+		}
+	}
+	
+	public void addPOI(POI poi) {
+	    try {
+	        // Verificar si el ID del POI ya está en uso
+	        if (isIDAvailable(poi.getId())) {
+	            // Si el ID está disponible, lo añadimos a la base de datos destino
+	            sourceDAO.addPoi(poi);
+	        } else {
+	            System.out.println("Error: Ya existe un POI con este ID.");
+	        }
+	    } catch (Exception e) {
+	        System.err.println("Error adding POI: " + e.getMessage());
+	    }
+	}
+	
+	public static boolean isIDAvailable(int id) {
+	    try {
+	        // Verifica si el POI con el ID especificado ya existe en la base de datos
+	        POI existingPoi = sourceDAO.listByID(id);
+	        return existingPoi == null; // Devuelve true si no existe, false si ya está en uso
+	    } catch (Exception e) {
+	        System.err.println("Error checking ID availability: " + e.getMessage());
+	        return false;
+	    }
+	}
+
+
+
+}

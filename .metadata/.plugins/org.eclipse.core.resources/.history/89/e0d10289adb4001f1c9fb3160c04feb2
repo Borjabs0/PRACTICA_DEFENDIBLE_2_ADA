@@ -1,0 +1,74 @@
+package DAO;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+
+import utils.PoiUtils;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Properties;
+
+public class MongoConnection {
+    private static volatile MongoClient connectionSingleton;
+
+
+    public static MongoClient getMongoConnection() throws FileNotFoundException, IOException {
+        if (connectionSingleton == null) {
+            synchronized (MongoConnection.class) {
+                if (connectionSingleton == null) {
+                    try {
+                        Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
+                        mongoLogger.setLevel(Level.SEVERE); // Reducir el nivel de logs
+                        
+                        // Cargamos las propiedades desde archivo
+        				Properties props = PoiUtils.load("src" + File.separator + "main" + File.separator + "resources" + File.separator + "mongo_connection_properties" + File.separator +"mongo_data_connection.properties");
+
+                        //Obtenemos propiedades desde PropertiesManager
+                        MongoCredential credential = PoiUtils.getMongoCredential(props);
+                        
+                        // Configurar la direccion del servidor 
+                        String host = props.getProperty("mongo.host");
+                		int port = Integer.parseInt(props.getProperty("mongo.port"));
+                        
+                       
+
+                        MongoClientSettings settings = MongoClientSettings.builder()
+                                .applyToClusterSettings(builder -> builder.hosts(
+                                        Collections.singletonList(new ServerAddress(host, port))))
+                                .credential(credential)
+                                .build();
+
+                        connectionSingleton = MongoClients.create(settings);
+                        System.out.println("MongoDB connection created successfully.");
+                    } catch (Exception e) {
+                        System.err.println("Error creating MongoDB connection: " + e.getMessage());
+                        e.printStackTrace();
+                        throw new RuntimeException("Failed to create MongoDB connection", e);
+                    }
+                }
+            }
+        }
+        return connectionSingleton;
+    }
+
+    public static void closeConnection() {
+        if (connectionSingleton != null) {
+            try {
+                connectionSingleton.close();
+                System.out.println("MongoDB connection closed successfully.");
+            } catch (Exception e) {
+                System.err.println("Error closing MongoDB connection: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+}

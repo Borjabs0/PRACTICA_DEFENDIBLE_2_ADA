@@ -1,0 +1,5 @@
+mongo.username=borja
+mongo.pass=bbgjrgnrgk.rr
+mongo.database=POI
+mongo.host=localhost
+mongo.port=27017

@@ -1,0 +1,38 @@
+package interfaces;
+
+import java.util.Date;
+import java.util.List;
+
+import models.POI;
+
+public interface IDAO{
+	
+	public POI addPoi(POI poi);
+	public POI removePoi();
+	
+	// Opciones para listar 
+	public List<POI> allItemFilters();
+	public POI filterByID(int id);
+	public List<POI> filterByIDRange(int min, int max);
+	public List<POI> filterByMonth(Date date);
+	public List<POI> filterByCity(String city);
+	
+	//Update item
+	public POI updateById(int id);
+
+	//Delete item 
+	public int removeAllItemFilters();
+	public POI removeByID(int id);
+	public List<POI> removeByIDRange(int min, int max);
+	public List<POI> removeByMonth(Date date);
+	public List<POI> removeByCity(String city);
+	
+	
+	 /**
+     * Sincronizar datos entre dos bases de datos.
+     * @param targetDAO La instancia de la base de datos de destino (DAO).
+     * @return true si la sincronización fue exitosa, false en caso contrario.
+     */
+	//Sincronizar BD
+	public boolean synchronizeDatabases(IDAO targetIDAO);
+}

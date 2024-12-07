@@ -1,0 +1,141 @@
+package DAO;
+
+import java.io.IOException;
+import java.sql.DatabaseMetaData;
+import java.util.Date;
+import java.util.List;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+
+import com.mongodb.MongoClient;
+
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.result.DeleteResult;
+
+import interfaces.IDAO;
+import models.POI;
+
+
+public class MongoDAO implements IDAO {
+	
+	private MongoClient mongoClient;
+	private MongoDatabase database;
+	
+	public MongoDAO() {
+		try {
+			this.mongoClient = (MongoClient) MongoConnection.getMongoConnection();
+			this.database = mongoClient.getDatabase("POIs");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+
+	//Metodo para agregar un POI a la base de datos MongoDB
+	@Override
+	public POI addPoi(POI poi) {
+		// Accede a la colección de POIs
+		MongoCollection<Document> collection = database.getCollection("pois");
+		
+		// Crear un documento de MongoDB a partir del POI
+        Document document = new Document()
+                .append("id", poi.getId())
+                .append("latitude", poi.getLatitude())
+                .append("longitude", poi.getLongitude())
+                .append("country", poi.getCountry())
+                .append("city", poi.getCity())
+                .append("description", poi.getDescription())
+                .append("updated", poi.getUpdatedDate());
+		
+		// Insertar el documento en la colección 
+        collection.insertOne(document);
+        
+       
+		return poi;
+	}
+
+	@Override
+	public POI removePoi(int id) {
+		// Acceder a la colección de POIs
+        MongoCollection<Document> collection = database.getCollection("pois");
+        
+        POI poi = filterByID(id);
+        DeleteResult result = collection.deleteOne( poi);
+        
+		return poi;
+	}
+
+	@Override
+	public List<POI> allItemFilters() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public POI filterByID(int id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> filterByIDRange(int min, int max) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> filterByMonth(Date date) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> filterByCity(String city) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public POI updateById(int id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int removeAllItemFilters() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public POI removeByID(int id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> removeByIDRange(int min, int max) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> removeByMonth(Date date) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> removeByCity(String city) {
+		// TODO Auto-generated method stub
+		return null;
+	}	
+	
+	@Override
+	public boolean synchronizeDatabases(IDAO targetIDAO) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+}

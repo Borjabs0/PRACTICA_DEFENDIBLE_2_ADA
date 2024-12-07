@@ -1,0 +1,87 @@
+package utils;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
+public class PoiMySQLUtils {
+	private static final PasswordEncryptionUtil PASSWORD_ENCRYPTION_UTIL= new PasswordEncryptionUtil();
+
+	
+	private static final String CONFIG_FILE_PATH = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "mongo_connection_properties" + File.separator +"mongo_data_connection.properties";
+
+	 // Propiedades MySQL
+    private static final String MYSQL_DEFAULT_DB_HOST = "localhost";
+    private static final int MYSQL_DEFAULT_DB_PORT = 3306;
+    private static final String MYSQL_DEFAULT_DB_NAME = "poi_db";
+    private static final String MYSQL_DEFAULT_DB_USER = "root";
+    private static final String MYSQL_DEFAULT_DB_PASSWORD = "1234";
+
+    private static final String MYSQL_DB_HOST_KEY = "mysql.db.host";
+    private static final String MYSQL_DB_PORT_KEY = "mysql.db.port";
+    private static final String MYSQL_DB_NAME_KEY = "mysql.db.name";
+    private static final String MYSQL_DB_USER_KEY = "mysql.db.user";
+    private static final String MYSQL_DB_PASSWORD_KEY = "mysql.db.password";
+
+    private static String mysqlDbHost = MYSQL_DEFAULT_DB_HOST;
+    private static int mysqlDbPort = MYSQL_DEFAULT_DB_PORT;
+    private static String mysqlDbName = MYSQL_DEFAULT_DB_NAME;
+    private static String mysqlDbUser = MYSQL_DEFAULT_DB_USER;
+    private static String mysqlDbPassword = MYSQL_DEFAULT_DB_PASSWORD;
+    
+ // Variables para almacenar los valores actuales de configuración
+    private static String dbHost = MYSQL_DEFAULT_DB_HOST;
+	private static int dbPort = MYSQL_DEFAULT_DB_PORT;
+    private static String dbName = MYSQL_DEFAULT_DB_NAME;
+    private static String dbUser = MYSQL_DEFAULT_DB_USER;
+    private static String dbPassword = MYSQL_DEFAULT_DB_PASSWORD;
+    
+    // Clave y algoritmo para la encriptación de contraseñas
+    private static final String ENCRYPTION_KEY = "MySuperSecretKey"; 
+    private static final String ALGORITHM = "AES";
+
+    // Getters para MySQL
+    public static String getMysqlDbHost() {
+        return mysqlDbHost;
+    }
+
+    public static int getMysqlDbPort() {
+        return mysqlDbPort;
+    }
+
+    public static String getMysqlDbName() {
+        return mysqlDbName;
+    }
+
+    public static String getMysqlDbUser() {
+        return mysqlDbUser;
+    }
+
+    public static String getMysqlDbPassword() {
+        return mysqlDbPassword;
+    }
+    
+    static {
+    	 Properties properties = new Properties();
+	        try (InputStream input = PoiMongoUtils.class.getClassLoader().getResourceAsStream(CONFIG_FILE_PATH)) {
+	            properties.load(input);
+
+	            dbHost = properties.getProperty(MYSQL_DB_HOST_KEY, MYSQL_DB_HOST_KEY);
+	            dbPort = Integer.parseInt(properties.getProperty(MYSQL_DB_PORT_KEY, String.valueOf(MYSQL_DEFAULT_DB_PORT)));
+	            dbName = properties.getProperty(MYSQL_DB_NAME_KEY, MYSQL_DEFAULT_DB_NAME);
+	            dbUser = properties.getProperty(MYSQL_DB_USER_KEY, MYSQL_DEFAULT_DB_USER);
+	            String encryptedPassword = properties.getProperty(MYSQL_DB_PASSWORD_KEY, "");
+	            dbPassword = encryptedPassword.isEmpty() ? MYSQL_DEFAULT_DB_PASSWORD : PASSWORD_ENCRYPTION_UTIL.decryptPassword(encryptedPassword);
+	        } catch (IOException e) {
+	            // En caso de excepcion se usan valores predeterminados
+	            System.err.println("Failed to load properties file. Using default configuration. " + e.getMessage());
+	            dbHost = MYSQL_DB_HOST_KEY;
+	            dbPort = MYSQL_DEFAULT_DB_PORT;
+	            dbName = MYSQL_DEFAULT_DB_NAME;
+	            dbUser = MYSQL_DEFAULT_DB_USER;
+	            dbPassword = MYSQL_DEFAULT_DB_PASSWORD;
+	        }
+    }
+
+}

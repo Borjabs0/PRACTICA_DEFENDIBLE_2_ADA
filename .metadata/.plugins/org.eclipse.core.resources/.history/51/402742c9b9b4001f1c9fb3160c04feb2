@@ -1,0 +1,50 @@
+package utils;
+
+import java.util.Properties;
+
+public class PoiMySQLUtils {
+	 // Propiedades MySQL
+    private static final String MYSQL_DEFAULT_DB_HOST = "localhost";
+    private static final int MYSQL_DEFAULT_DB_PORT = 3306;
+    private static final String MYSQL_DEFAULT_DB_NAME = "poi_db";
+    private static final String MYSQL_DEFAULT_DB_USER = "root";
+    private static final String MYSQL_DEFAULT_DB_PASSWORD = "root";
+
+    private static final String MYSQL_DB_HOST_KEY = "mysql.db.host";
+    private static final String MYSQL_DB_PORT_KEY = "mysql.db.port";
+    private static final String MYSQL_DB_NAME_KEY = "mysql.db.name";
+    private static final String MYSQL_DB_USER_KEY = "mysql.db.user";
+    private static final String MYSQL_DB_PASSWORD_KEY = "mysql.db.password";
+
+    private static String mysqlDbHost = MYSQL_DEFAULT_DB_HOST;
+    private static int mysqlDbPort = MYSQL_DEFAULT_DB_PORT;
+    private static String mysqlDbName = MYSQL_DEFAULT_DB_NAME;
+    private static String mysqlDbUser = MYSQL_DEFAULT_DB_USER;
+    private static String mysqlDbPassword = MYSQL_DEFAULT_DB_PASSWORD;
+
+    // Getters para MySQL
+    public static String getMysqlDbHost() {
+        return mysqlDbHost;
+    }
+
+    public static int getMysqlDbPort() {
+        return mysqlDbPort;
+    }
+
+    public static String getMysqlDbName() {
+        return mysqlDbName;
+    }
+
+    public static String getMysqlDbUser() {
+        return mysqlDbUser;
+    }
+
+    public static String getMysqlDbPassword() {
+        return mysqlDbPassword;
+    }
+    
+    static {
+    	Properties
+    }
+
+}

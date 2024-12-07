@@ -1,0 +1,47 @@
+package DAO;
+
+import java.io.FileNotFoundException;
+import java.nio.channels.ConnectionPendingException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+/**
+ * Clase para conectarse a la base de datos
+ */
+public class MySQLConnection{
+	
+	private static Connection connectionSingleton;
+	// url de la base de datos mysql
+	private static String URL = "jdbc:mysql://localhost:3306/Publications?useSSL=false&useTimezo-ne=true&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+	
+	static { try {
+		getConnectionInstance();
+	}
+	catch (SQLException e) {
+		System.out.println(e.getMessage());
+	}
+	}
+
+	public static Connection getConnectionInstance() throws SQLException {
+		// Si la conexion es nula o esta cerrada, crea una nueva 
+		if(connectionSingleton == null || connectionSingleton.isClosed()) {
+			//Creacion de nueva conexion 
+			connectionSingleton = (Connection) DriverManager.getConnection(URL, "root", "1234");
+			System.out.println("Connected");
+		}
+		return (Connection) connectionSingleton;
+	}
+	
+	/**
+	 * Metodo el cual se va ha encargar de cerrar la conexion al final del programa
+	 * @return connectionSingleton conexion cerrada
+	 * @throws SQLException
+	 */
+	public static Connection closeConnection() throws SQLException {
+		if (connectionSingleton != null) {
+			connectionSingleton.close();
+		}
+		return connectionSingleton;
+	}
+}

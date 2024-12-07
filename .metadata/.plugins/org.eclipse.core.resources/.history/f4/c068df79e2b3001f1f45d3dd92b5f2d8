@@ -1,0 +1,45 @@
+package propierties;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Properties;
+
+import com.mongodb.MongoCredential;
+
+import DAO.MongoConnection;
+
+public class PropertiesManager {
+	
+	public static Properties load(String filename) throws IOException, FileNotFoundException{
+		Properties properties = new Properties();
+		
+		FileInputStream input = new FileInputStream(filename);
+		try {
+			properties.load(input);
+			return properties;
+		}
+		finally {
+			input.close();
+		}
+	}
+	
+	
+	public static MongoCredential getMongoCredential(Properties properties) {
+		//Extraer valores del archivo de propiedades 
+		String username = properties.getProperty("mongo.username");
+		String password = properties.getProperty("mongo.pass");
+		String database = properties.getProperty("mongo.database");
+		String host = properties.getProperty("mongo.host");
+		String port = properties.getProperty("mongo.port");
+		
+		
+		// Comprobar que las propiedades necesarias están presentes 
+		if (username == null || password == null || database == null || host == null || port == null) {
+			throw new IllegalArgumentException("Faltan propiedades requeridas para las credenciales de MongoDB.");
+		}
+		
+		return MongoCredential.createCredential(username, database, password.toCharArray(), host, port);
+	}
+
+}

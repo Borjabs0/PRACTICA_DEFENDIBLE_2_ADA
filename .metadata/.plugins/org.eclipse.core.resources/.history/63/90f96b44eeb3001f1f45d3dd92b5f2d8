@@ -1,0 +1,90 @@
+package DAO;
+
+import java.util.Date;
+import java.util.List;
+
+import interfaces.IDAO;
+import models.POI;
+
+public class MySQLDAO implements IDAO{
+
+	@Override
+	public POI addPoi(POI poi) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public POI removePoi() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> allItemFilters() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public POI filterByID(int id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> filterByIDRange(int min, int max) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> filterByMonth(Date date) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> filterByCity(String city) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> updateById(int id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int removeAllItemFilters() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public POI removeByID(int id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> removeByIDRange(int min, int max) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> removeByMonth(Date date) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<POI> removeByCity(String city) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
+}

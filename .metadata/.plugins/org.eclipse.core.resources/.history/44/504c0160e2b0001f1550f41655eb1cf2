@@ -1,0 +1,14 @@
+package interfaces;
+
+import models.Poi;
+
+public interface IDAO{
+	
+	public Poi addItem();
+	
+	// Opciones para listar 
+	public int allItemFilters();
+	
+	
+
+}

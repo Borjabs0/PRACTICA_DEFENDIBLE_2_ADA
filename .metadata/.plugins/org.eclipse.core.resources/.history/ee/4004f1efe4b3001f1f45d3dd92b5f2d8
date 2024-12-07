@@ -1,0 +1,265 @@
+package ui;
+
+import models.*;
+import java.io.Console;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.invoke.StringConcatFactory;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.List;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.xpath.XPathExpressionException;
+
+import org.xml.sax.SAXException;
+
+import com.mongodb.client.MongoClient;
+
+import DAO.*;
+import lib.ConsoleMenu;
+import lib.LibIO;
+import managers.POIManagment;
+
+public class Main {
+	private static POIDAO bookDao = new POIDAO(); // Inicialización estática
+
+	public static void main(String[] args) {
+		try {
+			int option = menuPricipal();
+			processMenuOptionAndUserDialog(option);
+		} catch (XPathExpressionException | IOException | TransformerFactoryConfigurationError | TransformerException
+				| ParserConfigurationException | SAXException e) {
+			System.out.println("An error ocurred while processing option." + e.getMessage());
+		}
+		finally {
+			MongoConnection.closeConnection();
+		}
+	}
+
+	private static void processMenuOptionAndUserDialog(int option)
+			throws IOException, XPathExpressionException, TransformerFactoryConfigurationError, FileNotFoundException,
+			TransformerException, ParserConfigurationException, SAXException {
+		do {
+			switch (option) {
+			case 1:
+				System.out.println("=== Add POIs ===");
+				processOption1();
+				break;
+
+			case 2:
+				System.out.println("=== List Pois ===");
+				int subOption = subMenuListas();
+				processSubMenu(subOption);
+				break;
+
+			case 3:
+				System.out.println("=== Remove Books by ID ===");
+				// TODO: Implementar lógica para eliminar libros por ID
+				int id = LibIO.solicitarInt("Introduce el id a eliminar", 0, Integer.MAX_VALUE);
+				try {
+					System.out.println("Se ha eliminado correctamente el siguiente libro: \n" + deleteBookByIDString(id));
+				} catch (NullPointerException e) {
+					System.out.println("No se ha encontrado el id del libro");
+				}
+				break;
+			case 4:
+				System.out.println("=== Remove Books by Author ===");
+				// TODO: Implementar lógica para eliminar libros por autor
+				String author = LibIO.solicitarString("Introduce el autor a eliminar", 0, Integer.MAX_VALUE);
+				try {
+					System.out.println("Se ha eliminado correctamente el siguiente libro: \n" + deleteBookByAuthorString(author));
+				} catch (Exception e) {
+					System.out.println("No se ha encontrado el autor del libro");
+				}
+				break;
+
+			case 0:
+				System.out.println("Exiting the program...");
+				break;
+
+			default:
+				System.out.println("Invalid option. Please select a valid option from the menu.");
+			}
+
+			// Volver al menú principal si no se seleccionó la opción de salir
+			if (option != 0) {
+				option = menuPricipal();
+			}
+		} while (option != 0);
+	}
+
+	private static int menuPricipal() {
+
+		System.out.println("=== GESTIÓN DE PUNTOS DE INTERÉS ===");
+		
+		ConsoleMenu menuPrincipal = new ConsoleMenu("Choose an option");
+		menuPrincipal.addOpcion("Add POIs");
+		menuPrincipal.addOpcion("List POIs");
+		menuPrincipal.addOpcion("Remove POI by ID");
+		menuPrincipal.addOpcion("Remove POI by Author");
+
+		return menuPrincipal.mostrarMenu();
+	}
+
+	private static int subMenuListas() {
+		ConsoleMenu subMenuListas = new ConsoleMenu("Choose an option");
+		System.out.println("List POIs Filter Menu");
+		subMenuListas.addOpcion("List all POIs");
+		subMenuListas.addOpcion("Filter by ID (LIKE)");
+		subMenuListas.addOpcion("Filter by IDs range");
+		subMenuListas.addOpcion("Filter by month");
+		subMenuListas.addOpcion("Filter by city (LIKE)");
+
+		return subMenuListas.mostrarMenu();
+	}
+
+	private static void processSubMenu(int subOption) {
+		switch (subOption) {
+		case 1:
+			System.out.println("=== List All POIs ===");
+			// TODO: Implementar lógica para listar todos los libros
+			System.out.println(allBooks());
+			break;
+
+		case 2:
+			System.out.println("=== Filter by ID (LIKE) ===");
+			// TODO: Implementar lógica para filtrar libros por autor
+			String author = LibIO.solicitarString("Introduce el autor a buscar", 0, Integer.MAX_VALUE);
+			System.out.println(getBookByAuthorToStr(author));
+			break;
+
+		case 3:
+			System.out.println("=== Filter by IDs Range ===");
+			// TODO: Implementar lógica para filtrar libros por rango de precio
+			float min = LibIO.solicitarFloat("Introduce el precio minimo", 0, Integer.MAX_VALUE);
+			float max = LibIO.solicitarFloat("Introduce el precio maximo", 0, Integer.MAX_VALUE);
+
+			System.out.println(getBookByPriceRangeToStr(min, max));
+			break;
+
+		case 4:
+			System.out.println("=== Filter by month ===");
+			// TODO: Implementar lógica para filtrar libros por fecha de publicación
+			java.util.Date publishDate = LibIO.solicitarFechaDate(
+					"Introduce la fecha de publicacion con el siguiente formato para eliminar (yyyy-MM-dd)",
+					new SimpleDateFormat("yyyy-MM-dd"));
+			System.out.println(getBookByDateToStr(publishDate));
+			
+			break;
+
+		case 5:
+			System.out.println("=== Filter by City ===");
+			// TODO: Implementar lógica para filtrar libros por título
+			String title = LibIO.solicitarString("Introduce el titulo del libro a buscar", 0, Integer.MAX_VALUE);
+			System.out.println(getBookByTitleToStr(title));
+			break;
+
+		case 0:
+			System.out.println("Returning to the main menu...");
+			break;
+
+		default:
+			System.out.println("Invalid option in the sub-menu. Please select a valid option.");
+		}
+	}
+
+	public static void processOption1() {
+		boolean continueAdding = true;
+
+		while (continueAdding) {
+			try {
+				System.out.println("=== Añadir Nuevo POI ===");
+
+				// Solicitar ID (0 para terminar)
+				int id = LibIO.solicitarInt("Introduce el id del POI (0 para terminar)", 0, Integer.MAX_VALUE);
+				if (id == 0) {
+					menuPricipal();
+					break;
+				}
+				if (POIManagment.getID(id) == false) {
+					System.out.println("Error ya existe un POI con es id");
+					break;
+				}
+				// Solicitar resto de datos
+				String latitude = LibIO.solicitarString("Introduce la latitud: ", 2, 100);
+				String longitude = LibIO.solicitarString("Introduce la longitud: ", 2, 100);
+
+				String city = LibIO.solicitarString("Introduce la ciudad: ", 2, 100);
+				String country = LibIO.solicitarString("Introduce el pais", 0, Integer.MAX_VALUE);
+
+				// Solicitar descripcion
+				String descripcion = LibIO.solicitarString("Introduce la descripcion", 0, 500);
+				
+				// Solicitar Fecha
+				java.util.Date publishDate = LibIO.solicitarFechaDate(
+						"Introduce la fecha de publicacion con el siguiente formato (yyyy-MM-dd)",
+						new SimpleDateFormat("yyyy-MM-dd"));
+
+			
+
+				if (POIManagment.savePOI(id, latitude, longitude, city, country, publishDate, descripcion) == true) {
+					System.out.println("Libro añadido correctamente");
+				} else {
+					System.err.println("Ha habido un error añadiendo el libro");
+				}
+
+			} catch (Exception e) {
+				System.out.println("Error al añadir el libro: " + e.getMessage());
+				System.out.println("Por favor, intente nuevamente.");
+			}
+		}
+
+	}
+
+	public static boolean getID(int id) {
+		if (bookDao.getBookById(id) != null) {
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean saveBook(int id, String author, String title, Genre genre, float price, Date publishDate,
+			String descripcion) {
+		Book newBook = new Book(id, author, title, genre, price, publishDate, descripcion);
+		bookDao.insertBooks(newBook);
+		return true;
+	}
+
+	public static String allBooks() {
+		List<Book> books = bookDao.getAllBooks();
+		return books.toString();
+	}
+
+	public static String getBookByAuthorToStr(String author) {
+		List<Book> books = bookDao.getBookByAuthor(author);
+		return books.toString();
+	}
+	
+	public static String getBookByTitleToStr(String title) {
+		List<Book> books = bookDao.getBookByAuthor(title);
+		return books.toString();
+	}
+	public static String getBookByPriceRangeToStr(float min, float max) {
+		List<Book> books = bookDao.getBooksByPriceRange(min, max);
+		return books.toString();
+	}
+	
+	public static String getBookByDateToStr(java.util.Date publishDate) {
+		List<Book> books = bookDao.getBookByDate(publishDate);
+		return books.toString();
+	}
+	
+
+	public static String deleteBookByIDString(int id) {
+		Book book = bookDao.deleteBookById(id);
+		return book.toString();
+	}
+
+	public static String deleteBookByAuthorString(String author) {
+		List<Book> books = bookDao.deleteBooksByAuthor(author);
+		return books.toString();
+	}
+}

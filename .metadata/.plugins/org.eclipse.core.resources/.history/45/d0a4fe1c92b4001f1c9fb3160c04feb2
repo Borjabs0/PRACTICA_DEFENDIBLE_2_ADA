@@ -1,0 +1,64 @@
+package utils;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Properties;
+
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+
+import DAO.MongoConnection;
+
+public class PropertiesManager {
+	
+	public static Properties load(String filename) throws IOException, FileNotFoundException{
+		Properties properties = new Properties();
+		
+		FileInputStream input = new FileInputStream(filename);
+		try {
+			properties.load(input);
+			return properties;
+		}
+		finally {
+			input.close();
+		}
+	}
+	
+	
+	public static MongoCredential getMongoCredential(Properties properties) {
+		//Extraer valores del archivo de propiedades 
+		String username = properties.getProperty("mongo.username");
+		String password = properties.getProperty("mongo.pass");
+		String database = properties.getProperty("mongo.database");
+		
+		
+		
+		// Comprobar que las propiedades necesarias están presentes 
+		if (username == null || password == null || database == null) {
+			throw new IllegalArgumentException("Faltan propiedades requeridas para las credenciales de MongoDB.");
+		}
+		
+		return MongoCredential.createCredential(username, database, password.toCharArray());
+	}
+	
+	// Obtener la base de datos MongoDB utilizando las propiedades
+    public static MongoDatabase getDatabase(String filename) throws IOException {
+        // Cargar las propiedades desde el archivo
+        Properties properties = load(filename);
+
+        // Obtener las credenciales de MongoDB
+        MongoCredential credential = getMongoCredential(properties);
+
+        // Obtener la dirección del servidor MongoDB
+        String host = properties.getProperty("mongo.host");
+        int port = Integer.parseInt(properties.getProperty("mongo.port"));
+
+        // Usar MongoConnection para establecer la conexión
+        MongoClient mongoClient = MongoConnection.getMongoConnection(host, port, credential);
+
+        // Obtener la base de datos usando el nombre de la base de datos desde las propiedades
+        return mongoClient.getDatabase(properties.getProperty("mongo.database"));
+    }
+
+}

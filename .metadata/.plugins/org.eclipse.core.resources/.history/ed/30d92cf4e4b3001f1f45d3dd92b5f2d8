@@ -1,0 +1,42 @@
+package test;
+
+import DAO.MongoConnection;
+import DAO.MySQLConnection;
+import com.mongodb.client.MongoClient;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+public class Main {
+    public static void main(String[] args) {
+        // Probar conexión MySQL
+        System.out.println("Testing MySQL Connection...");
+        try {
+            Connection mysqlConnection = MySQLConnection.getConnectionInstance();
+            System.out.println("MySQL Connection is active: " + !mysqlConnection.isClosed());
+
+            // Realizar una consulta básica (opcional)
+            // var statement = mysqlConnection.createStatement();
+            // statement.executeQuery("SELECT 1");
+
+            MySQLConnection.closeConnection();
+            System.out.println("MySQL Connection closed successfully.");
+        } catch (SQLException e) {
+            System.err.println("MySQL Connection Error: " + e.getMessage());
+        }
+
+        // Probar conexión MongoDB
+        System.out.println("\nTesting MongoDB Connection...");
+        try {
+            MongoClient mongoClient = MongoConnection.getMongoConnection();
+            if (mongoClient != null) {
+                System.out.println("MongoDB Connection is active.");
+            }
+
+            MongoConnection.closeConnection();
+            System.out.println("MongoDB Connection closed successfully.");
+        } catch (Exception e) {
+            System.err.println("MongoDB Connection Error: " + e.getMessage());
+        }
+    }
+}

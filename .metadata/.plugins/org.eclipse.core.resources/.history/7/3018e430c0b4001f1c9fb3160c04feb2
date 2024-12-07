@@ -1,0 +1,110 @@
+package DAO;
+
+import interfaces.IDAO;
+import models.POI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * Implementación de IDAO para interactuar con una base de datos MySQL.
+ */
+public class PoiMySQLDAO implements IDAO {
+	private static final Logger LOGGER = LoggerFactory.getLogger(PoiMySQLDAO.class);
+	private final Connection connection;
+
+	/**
+	 * Constructor que inicializa la conexión y asegura la existencia de la tabla.
+	 */
+	public PoiMySQLDAO() {
+		this.connection = MySQLConnection.getInstance().getConnection();
+		createTableIfNotExists();
+	}
+
+	/**
+	 * Crea la tabla 'pois' si no existe.
+	 */
+	private void createTableIfNotExists() {
+		String sql = "CREATE TABLE IF NOT EXISTS pois (id INT AUTO_INCREMENT PRIMARY KEY,latitude DOUBLE,longitude DOUBLE,country VARCHAR(100),city VARCHAR(100),description TEXT,updated_date DATE)";
+
+		try (Statement stmt = connection.createStatement()) {
+			stmt.execute(sql);
+		} catch (SQLException e) {
+			LOGGER.error("Error creating table", e);
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public void addPoi(POI poi) {
+		String sql = "INSERT INTO pois (latitude, longitude, country, city, description, updated_date) VALUES (?, ?, ?, ?, ?, ?)";
+		try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+			pstmt.setDouble(1, poi.getLatitude());
+			pstmt.setDouble(2, poi.getLongitude());
+			pstmt.setString(3, poi.getCountry());
+			pstmt.setString(4, poi.getCity());
+			pstmt.setString(5, poi.getDescription());
+			pstmt.setDate(6, (java.sql.Date) poi.getUpdatedDate());
+			pstmt.executeUpdate();
+
+		} catch (SQLException e) {
+			LOGGER.error("Error adding POI", e);
+			throw new RuntimeException(e);
+		}
+	}
+
+
+	@Override
+	public POI removePoi(int id) {
+		String sql = "DELETE FROM pois WHERE id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+			pstmt.setInt(1, id);
+			int rowsAffected = pstmt.executeUpdate();
+			return rowsAffected > 0 ? new POI(id, null, null, null, null, null, null) : null;
+		} catch (SQLException e) {
+			LOGGER.error("Error removing POI", e);
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public List<POI> listAllPois() {
+		String sql = "SELECT * FROM pois";
+		List<POI> pois = new ArrayList<>();
+		try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+			while (rs.next()) {
+				pois.add(mapResultSetToPOI(rs));
+			}
+		} catch (SQLException e) {
+			LOGGER.error("Error retrieving POIs", e);
+			throw new RuntimeException(e);
+		}
+		return pois;
+	}
+
+	// Método auxiliar para mapear un ResultSet a un objeto POI
+	private POI mapResultSetToPOI(ResultSet rs) throws SQLException {
+		return new POI(rs.getInt("id"), rs.getDouble("latitude"), rs.getDouble("longitude"), rs.getString("country"),
+				rs.getString("city"), rs.getString("description"), rs.getTimestamp("updated_date"));
+	}
+
+	@Override
+	public boolean synchronizeDatabases(IDAO targetDAO) {
+		try {
+			List<POI> pois = allItemFilters();
+			for (POI poi : pois) {
+				targetDAO.addPoi(poi);
+			}
+			return true;
+		} catch (Exception e) {
+			LOGGER.error("Error synchronizing databases", e);
+			return false;
+		}
+	}
+
+	// Implementar otros métodos de la interfaz IDAO...
+}

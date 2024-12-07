@@ -1,0 +1,163 @@
+package dao;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.bson.Document;
+import org.w3c.dom.ls.LSInput;
+
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+
+import lib.LibIO;
+import model.Book;
+import model.Genre;
+
+public class BookDao {
+	private static final String DATABASE_NAME = "ADApt25";
+	private static final String COLLECTION_NAME = "Books";
+	private final MongoCollection<Document> collection;
+
+
+	public BookDao() {
+		MongoDatabase database = MongoConnection.getMongoConnection().getDatabase(DATABASE_NAME);
+		this.collection = database.getCollection(COLLECTION_NAME);
+	}
+
+	// Metodo para insertar un libro
+	public void insertBooks(Book book) {
+		Document doc = new Document().append("id", book.getId()).append("author", book.getAuthor())
+				.append("title", book.getTitle()).append("genre", book.getGener()).append("price", book.getPrice())
+				.append("publishDate", book.getPublishDate()).append("description", book.getDescription());
+		collection.insertOne(doc);
+	}
+
+	// Metodo para obtener todos los libros
+	public List<Book> getAllBooks() {
+		List<Book> books = new ArrayList<Book>();
+		MongoCursor<Document> cursor = collection.find().iterator();
+
+		try {
+			while (cursor.hasNext()) {
+				books.add(documentToBook(cursor.next()));
+			}
+		} finally {
+			cursor.close();
+		}
+		return books;
+	}
+
+	// Metodo para obtener libros por ID
+	public Book getBookById(int id) {
+		Document document = collection.find(Filters.eq("id", id)).first();
+		return document != null ? documentToBook(document) : null;
+	}
+
+	// Metodo para obtener libros por autor
+	public List<Book> getBookByAuthor(String author) {
+		List<Book> books = new ArrayList<Book>();
+		MongoCursor<Document> cursor = collection.find(Filters.regex("author", author, "i")).iterator();
+
+		try {
+			while (cursor.hasNext()) {
+				books.add(documentToBook(cursor.next()));
+			}
+		} finally {
+			cursor.close();
+		}
+
+		return books;
+	}
+	
+	// Metodo para obtener libros por rango de precios
+	public List<Book> getBooksByPriceRange(float minPrice, float maxPrice) {
+	    List<Book> books = new ArrayList<>();
+
+	    // Crear un cursor con el filtro de rango de precios
+	    MongoCursor<Document> cursor = collection.find(
+	        Filters.and(
+	            Filters.gte("price", minPrice), // Precio >= minPrice
+	            Filters.lte("price", maxPrice) // Precio <= maxPrice
+	        )
+	    ).iterator();
+
+	    try {
+	        // Iterar sobre los resultados y convertirlos a objetos Book
+	        while (cursor.hasNext()) {
+	            books.add(documentToBook(cursor.next()));
+	        }
+	    } finally {
+	        cursor.close(); // Cerrar el cursor para liberar recursos
+	    }
+
+	    return books; // Devolver la lista de libros
+	}
+	
+	// Metodo para obtener libros por date
+		public List<Book> getBookByDate(Date publishDate) {
+			List<Book> books = new ArrayList<Book>();
+			MongoCursor<Document> cursor = collection.find(Filters.eq("publishDate", publishDate)).iterator();
+
+			try {
+				while (cursor.hasNext()) {
+					books.add(documentToBook(cursor.next()));
+				}
+			} finally {
+				cursor.close();
+			}
+			return books;
+		}
+
+	// Metodo para obtener libros por titulo
+	public List<Book> getBookByTitle(String titulo) {
+		List<Book> books = new ArrayList<Book>();
+		MongoCursor<Document> cursor = collection.find(Filters.regex("titulo", titulo, "i")).iterator();
+
+		try {
+			while (cursor.hasNext()) {
+				books.add(documentToBook(cursor.next()));
+			}
+		} finally {
+			cursor.close();
+		}
+		return books;
+	}
+
+	// Metodo para eliminar un libro por ID
+	public Book deleteBookById(int id) {	
+		Document bookDocument = collection.find(Filters.eq("id", id)).first();
+		
+		Book book = documentToBook(bookDocument);
+		
+		collection.deleteOne(Filters.eq("id", id));
+		
+		return book;
+	}
+
+	// Metodo para eliminar un libro por autor
+	public List<Book> deleteBooksByAuthor(String author) {
+		List<Book> books = new ArrayList<Book>();
+		MongoCursor<Document> cursor = collection.find(Filters.regex("author", author , "i")).iterator();
+
+		try {
+			while (cursor.hasNext()) {
+				books.add(documentToBook(cursor.next()));
+			}
+		} finally {
+			cursor.close();
+		}
+
+		return books;
+	}
+
+	// Método para convertir Document a Book
+	private Book documentToBook(Document doc) {
+		return new Book(doc.getInteger("id"), doc.getString("author"), doc.getString("title"),
+				Genre.fromStringGenre(doc.getString("genre")), doc.getDouble("price").floatValue(), doc.getDate("publishDate"),
+				doc.getString("description"));
+	}
+}

@@ -1,0 +1,59 @@
+package dao;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+
+import java.util.Collections;
+
+public class MongoConnection {
+    private static volatile MongoClient connectionSingleton;
+
+
+    public static MongoClient getMongoConnection() {
+        if (connectionSingleton == null) {
+            synchronized (MongoConnection.class) {
+                if (connectionSingleton == null) {
+                    try {
+                        Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
+                        mongoLogger.setLevel(Level.SEVERE); // Reducir el nivel de logs
+
+                        MongoCredential credential = MongoCredential.createCredential(
+                                "borja", "ADApt25", "bbgjrgnrgk.rr".toCharArray());
+
+                        MongoClientSettings settings = MongoClientSettings.builder()
+                                .applyToClusterSettings(builder -> builder.hosts(
+                                        Collections.singletonList(new ServerAddress("localhost", 27017))))
+                                .credential(credential)
+                                .build();
+
+                        connectionSingleton = MongoClients.create(settings);
+                        System.out.println("MongoDB connection created successfully.");
+                    } catch (Exception e) {
+                        System.err.println("Error creating MongoDB connection: " + e.getMessage());
+                        e.printStackTrace();
+                        throw new RuntimeException("Failed to create MongoDB connection", e);
+                    }
+                }
+            }
+        }
+        return connectionSingleton;
+    }
+
+    public static void closeConnection() {
+        if (connectionSingleton != null) {
+            try {
+                connectionSingleton.close();
+                System.out.println("MongoDB connection closed successfully.");
+            } catch (Exception e) {
+                System.err.println("Error closing MongoDB connection: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+}

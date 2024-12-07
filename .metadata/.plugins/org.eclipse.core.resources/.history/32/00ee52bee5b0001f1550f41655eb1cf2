@@ -1,0 +1,29 @@
+package interfaces;
+
+import java.util.Date;
+import java.util.List;
+
+import models.Poi;
+
+public interface IDAO{
+	
+	public Poi addPoi();
+	public Poi removePoi();
+	
+	// Opciones para listar 
+	public List<Poi> allItemFilters();
+	public Poi filterByID(int id);
+	public List<Poi> filterByIDRange(int min, int max);
+	public List<Poi> filterByMonth(Date date);
+	public List<Poi> filterByCity(String city);
+	
+	//Update item
+	public List<Poi> updateById(int id);
+
+	//Delete item 
+	public int removeAllItemFilters();
+	public Poi removeByID(int id);
+	public List<Poi> removeByIDRange(int min, int max);
+	public List<Poi> romoveByMonth(Date date);
+	public List<Poi> removeByCity(String city);
+}

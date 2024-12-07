@@ -1,0 +1,7 @@
+package DAO;
+
+import interfaces.IDAO;
+
+public class MySQLDAO implements IDAO{
+	
+}

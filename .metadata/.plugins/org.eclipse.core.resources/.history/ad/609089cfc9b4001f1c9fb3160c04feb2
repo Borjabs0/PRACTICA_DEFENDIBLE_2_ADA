@@ -1,0 +1,260 @@
+package ui;
+
+import lib.ConsoleMenu;
+
+public class Main {
+    public static void main(String[] args) {
+        try {
+            int option = menuPrincipal();
+            processMenuOption(option);
+        } catch (Exception e) {
+            System.err.println("An error occurred: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            MongoConnection.closeInstance(); // Cerrar conexión MongoDB
+        }
+    }
+
+    // Menú principal
+    private static int menuPrincipal() {
+        System.out.println("=== GESTIÓN DE PUNTOS DE INTERÉS ===");
+
+        ConsoleMenu menu = new ConsoleMenu("Choose an option");
+        menu.addOpcion("Add POIs");
+        menu.addOpcion("List POIs");
+        menu.addOpcion("Remove POI by ID");
+        menu.addOpcion("Remove POI by Author");
+        menu.addOpcion("Sync Databases");
+
+        return menu.mostrarMenu();
+    }
+
+    // Procesar opciones del menú principal
+    private static void processMenuOption(int option) {
+        do {
+            switch (option) {
+                case 1:
+                    System.out.println("=== Add POIs ===");
+                    processAddPOI();
+                    break;
+
+                case 2:
+                    System.out.println("=== List POIs ===");
+                    processListPOIs();
+                    break;
+
+                case 3:
+                    System.out.println("=== Remove POI by ID ===");
+                    processRemovePoiById();
+                    break;
+
+                case 4:
+                    System.out.println("=== Remove POI by Author ===");
+                    processRemovePoiByAuthor();
+                    break;
+
+                case 5:
+                    System.out.println("=== Sync Databases ===");
+                    processSyncDatabases();
+                    break;
+
+                case 0:
+                    System.out.println("Exiting the program...");
+                    return;
+
+                default:
+                    System.out.println("Invalid option. Please select a valid option.");
+            }
+
+            if (option != 0) {
+                option = menuPrincipal(); // Volver al menú principal
+            }
+        } while (option != 0);
+    }
+
+    // Procesar la opción de añadir POIs
+    private static void processAddPOI() {
+        boolean continueAdding = true;
+
+        while (continueAdding) {
+            try {
+                System.out.println("=== Añadir Nuevo POI ===");
+
+                int id = LibIO.solicitarInt("Introduce el ID del POI (0 para terminar): ", 0, Integer.MAX_VALUE);
+                if (id == 0) break;
+
+                if (POIManagment.isIDAvailable(id)) {
+                    float latitude = LibIO.solicitarFloat("Introduce la latitud: ", 2, 100);
+                    float longitude = LibIO.solicitarFloat("Introduce la longitud: ", 2, 100);
+                    String city = LibIO.solicitarString("Introduce la ciudad: ", 2, 100);
+                    String country = LibIO.solicitarString("Introduce el país: ", 2, 100);
+                    java.util.Date publishDate = LibIO.solicitarFechaDate(
+                            "Introduce la fecha de publicación (yyyy-MM-dd): ",
+                            new SimpleDateFormat("yyyy-MM-dd"));
+                    String description = LibIO.solicitarString("Introduce la descripción: ", 0, 500);
+
+                    POI poi = new POI(id, latitude, longitude, city, country, description, publishDate);
+                    POIManagment poiManagment = new POIManagment(new PoiMySQLDAO(), new PoiMongoDAO(null));
+                    poiManagment.addPOI(poi);
+                    System.out.println("POI añadido correctamente.");
+                } else {
+                    System.out.println("Error: Ya existe un POI con este ID.");
+                }
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+            }
+        }
+    }
+
+    // Procesar la opción de listar POIs
+    private static void processListPOIs() {
+        int subOption = subMenuListas();
+        switch (subOption) {
+            case 1:
+                System.out.println("=== List All POIs ===");
+                processListAllPois();
+                break;
+
+            case 2:
+                System.out.println("=== Filter by ID (LIKE) ===");
+                processListByIDPartial();
+                break;
+
+            case 3:
+                System.out.println("=== Filter by IDs Range ===");
+                processListByIDRange();
+                break;
+
+            case 4:
+                System.out.println("=== Filter by City ===");
+                processListByCity();
+                break;
+
+            case 0:
+                System.out.println("Returning to the main menu...");
+                break;
+
+            default:
+                System.out.println("Invalid sub-menu option.");
+        }
+    }
+
+    // Submenú para listar POIs
+    private static int subMenuListas() {
+        ConsoleMenu menu = new ConsoleMenu("Filter Menu");
+        menu.addOpcion("List all POIs");
+        menu.addOpcion("Filter by ID (LIKE)");
+        menu.addOpcion("Filter by IDs range");
+        menu.addOpcion("Filter by city");
+        return menu.mostrarMenu();
+    }
+
+    private static void processListAllPois() {
+        try {
+            POIManagment poiManagment = new POIManagment(new PoiMySQLDAO(), new PoiMongoDAO(null));
+            List<POI> pois = poiManagment.synchronizeDatabases(true); // De MySQL a MongoDB
+
+            for (POI poi : pois) {
+                System.out.println(poi);
+            }
+        } catch (Exception e) {
+            System.err.println("Error listing all POIs: " + e.getMessage());
+        }
+    }
+
+    private static void processListByIDPartial() {
+        try {
+            String partialId = LibIO.solicitarString("Introduce parte del ID a buscar: ", 1, 100);
+
+            POIManagment poiManagment = new POIManagment(new PoiMySQLDAO(), new PoiMongoDAO(null));
+            List<POI> pois = poiManagment.listByID(partialId);
+
+            for (POI poi : pois) {
+                System.out.println(poi);
+            }
+        } catch (Exception e) {
+            System.err.println("Error filtering POIs by ID: " + e.getMessage());
+        }
+    }
+
+    private static void processListByIDRange() {
+        try {
+            int min = LibIO.solicitarInt("Introduce el ID mínimo: ", 0, Integer.MAX_VALUE);
+            int max = LibIO.solicitarInt("Introduce el ID máximo: ", 0, Integer.MAX_VALUE);
+
+            POIManagment poiManagment = new POIManagment(new PoiMySQLDAO(), new PoiMongoDAO(null));
+            List<POI> pois = poiManagment.listByIDRange(min, max);
+
+            for (POI poi : pois) {
+                System.out.println(poi);
+            }
+        } catch (Exception e) {
+            System.err.println("Error filtering POIs by ID range: " + e.getMessage());
+        }
+    }
+
+    private static void processListByCity() {
+        try {
+            String city = LibIO.solicitarString("Introduce la ciudad: ", 1, 100);
+
+            POIManagment poiManagment = new POIManagment(new PoiMySQLDAO(), new PoiMongoDAO(null));
+            List<POI> pois = poiManagment.listByCity(city);
+
+            for (POI poi : pois) {
+                System.out.println(poi);
+            }
+        } catch (Exception e) {
+            System.err.println("Error filtering POIs by city: " + e.getMessage());
+        }
+    }
+
+    // Procesar la opción de eliminar POI por ID
+    private static void processRemovePoiById() {
+        try {
+            int id = LibIO.solicitarInt("Introduce el ID del POI a eliminar: ", 0, Integer.MAX_VALUE);
+            POIManagment poiManagment = new POIManagment(new PoiMySQLDAO(), new PoiMongoDAO(null));
+            POI removedPoi = poiManagment.removeByID(id);
+            if (removedPoi != null) {
+                System.out.println("POI eliminado correctamente: " + removedPoi);
+            } else {
+                System.out.println("No se encontró un POI con el ID especificado.");
+            }
+        } catch (Exception e) {
+            System.err.println("Error removing POI by ID: " + e.getMessage());
+        }
+    }
+
+    // Procesar la opción de eliminar POI por autor
+    private static void processRemovePoiByAuthor() {
+        try {
+            String author = LibIO.solicitarString("Introduce el autor de los POIs a eliminar: ", 1, 100);
+
+            POIManagment poiManagment = new POIManagment(new PoiMySQLDAO(), new PoiMongoDAO(null));
+            List<POI> removedPois = poiManagment.removeByAuthor(author);
+
+            if (!removedPois.isEmpty()) {
+                System.out.println("POIs eliminados:");
+                removedPois.forEach(System.out::println);
+            } else {
+                System.out.println("No se encontraron POIs del autor especificado.");
+            }
+        } catch (Exception e) {
+            System.err.println("Error removing POIs by author: " + e.getMessage());
+        }
+    }
+
+    private static void processSyncDatabases() {
+        try {
+            POIManagment poiManagment = new POIManagment(new PoiMySQLDAO(), new PoiMongoDAO(null));
+            boolean success = poiManagment.synchronizeDatabases(true); // De MySQL a MongoDB
+
+            if (success) {
+                System.out.println("Synchronization successful from MySQL to MongoDB.");
+            } else {
+                System.out.println("Synchronization failed.");
+            }
+        } catch (Exception e) {
+            System.err.println("Error during database synchronization: " + e.getMessage());
+        }
+    }
+}

@@ -1,0 +1,27 @@
+1733165767848	Move compilation unit
+1733165902397	Move compilation unit
+1733165917156	Delete elements
+1733165924663	Delete element
+1733166158599	Delete element
+1733166218011	Move file
+1733166876691	Delete element
+1733167094655	Rename type 'Item'
+1733167171154	Rename package 'DOM'
+1733236248579	Rename type 'Poi'
+1733236266050	Rename type 'PoiManagment'
+1733236311268	Rename compilation unit 'BookDao.java'
+1733236324805	Rename compilation unit 'BOOKDAO.java'
+1733238458324	Rename package 'managments'
+1733241968714	Delete element
+1733485007761	Move file
+1733485027679	Rename resource 'mongodataconnection.properties'
+1733486500309	Rename type 'PropiertiesManager'
+1733497464906	Rename resource 'mongo_connection.propierties'
+1733497480874	Rename resource 'mysql_data_connection_'
+1733498518952	Rename resource 'mysql_connection_propierties'
+1733498536496	Rename resource 'mongo_connection_propierties'
+1733498549272	Rename resource 'mysql_connection_propeties'
+1733572423906	Rename package 'propierties'
+1733572511651	Rename type 'PropertiesManager'
+1733586369172	Rename type 'MySQLDAO'
+1733588921536	Rename type 'PoiUtils'

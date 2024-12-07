@@ -1,0 +1,28 @@
+"POI": [
+ {
+ "poid": 12,
+ "latitude": 40.416875,
+ "longitude": -3.703308,
+ "country": "Spain",
+ "city": "Madrid",
+ "description": "Puerta del Sol"
+ "updated": "2012-15-15"
+ },
+ {
+	"poid": 14,	"latitude": 40.417438,
+	 "longitude": -3.693363,
+	 "city": "Madrid",
+	 "description": "Paseo del Prado"
+	 "updated": "2012-15-15"
+	 },
+	 {
+	 "poid": 15,
+	 "latitude": 40.407015,
+	 "longitude": -3.691163,
+	 "city": "Madrid",
+	 "country": "Spain",
+	 "description": "Estación de Atocha"
+	 "updated": "2012-15-15"
+	 }
+	 ]
+	}

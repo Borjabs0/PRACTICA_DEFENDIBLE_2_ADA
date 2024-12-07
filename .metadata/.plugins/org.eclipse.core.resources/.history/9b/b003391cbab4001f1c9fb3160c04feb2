@@ -1,0 +1,181 @@
+package utils;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Base64;
+import java.util.Properties;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+
+import DAO.MongoConnection;
+
+/**
+ * La clase PoiUtils proporciona utilidades relacionadas con la configuración de conexiones 
+ * a bases de datos MongoDB, incluyendo la encriptación y desencriptación de contraseñas.
+ */
+public class PoiMongoUtils {
+	
+	/**
+	 * Formato de fecha predeterminado
+	 */
+	public static final String DATE_FORMAT = "yyyy-mm-dd";
+	
+	// Configuracion preedeterminada y propiedades clave
+	private static final String CONFIG_FILE_PATH = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "mongo_connection_properties" + File.separator +"mongo_data_connection.properties";
+
+	  private static final String DEFAULT_DB_HOST = "localhost";
+	    private static final int DEFAULT_DB_PORT = 27017;
+	    private static final String DEFAULT_DB_NAME = "poi_db";
+	    private static final String DEFAULT_DB_USER = "borja";
+	    private static final String DEFAULT_DB_PASSWORD = "bbgjrgnrgk.rr";
+	    
+	    
+	    private static final String DB_HOST_KEY = "db.host";
+	    private static final String DB_PORT_KEY = "db.port";
+	    private static final String DB_NAME_KEY = "db.name";
+	    private static final String DB_USER_KEY = "db.user";
+	    private static final String DB_PASSWORD_KEY = "db.password";
+	    
+	    // Variables para almacenar los valores actuales de configuración
+	    private static String dbHost = DEFAULT_DB_HOST;
+		private static int dbPort = DEFAULT_DB_PORT;
+	    private static String dbName = DEFAULT_DB_NAME;
+	    private static String dbUser = DEFAULT_DB_USER;
+	    private static String dbPassword = DEFAULT_DB_PASSWORD;
+	    
+	    // Clave y algoritmo para la encriptación de contraseñas
+	    private static final String ENCRYPTION_KEY = "MySuperSecretKey"; 
+	    private static final String ALGORITHM = "AES";
+	    
+	    
+	    /*
+	     * Obtiene el host de la base de datos configurada.
+	     * 
+	     * @return el host de la base de datos
+	     */
+	    public static String getDbHost() {
+			return dbHost;
+		}
+	    
+	    /**
+	     * Obtiene el puerto de la base de datos configurada.
+	     * 
+	     * @return el puerto de la base de datos.
+	     */
+	    public static int getDbPort() {
+	        return dbPort;
+	    }
+
+	    /**
+	     * Obtiene el nombre de la base de datos configurada.
+	     * 
+	     * @return el nombre de la base de datos.
+	     */
+	    public static String getDbName() {
+	        return dbName;
+	    }
+
+	    /**
+	     * Obtiene el usuario de la base de datos configurada.
+	     * 
+	     * @return el usuario de la base de datos.
+	     */
+	    public static String getDbUser() {
+	        return dbUser;
+	    }
+
+	    /**
+	     * Obtiene la contraseña de la base de datos configurada.
+	     * 
+	     * @return la contraseña de la base de datos.
+	     */
+	    public static String getDbPassword() {
+	        return dbPassword;
+	    }
+	    
+	   
+	    // Bloque estático para cargar la configuración desde un archivo de propiedades
+	    static {
+	        Properties properties = new Properties();
+	        try (InputStream input = PoiMongoUtils.class.getClassLoader().getResourceAsStream(CONFIG_FILE_PATH)) {
+	            properties.load(input);
+
+	            dbHost = properties.getProperty(DB_HOST_KEY, DEFAULT_DB_HOST);
+	            dbPort = Integer.parseInt(properties.getProperty(DB_PORT_KEY, String.valueOf(DEFAULT_DB_PORT)));
+	            dbName = properties.getProperty(DB_NAME_KEY, DEFAULT_DB_NAME);
+	            dbUser = properties.getProperty(DB_USER_KEY, DEFAULT_DB_USER);
+	            String encryptedPassword = properties.getProperty(DB_PASSWORD_KEY, "");
+	            dbPassword = encryptedPassword.isEmpty() ? DEFAULT_DB_PASSWORD : decryptPassword(encryptedPassword);
+	        } catch (IOException e) {
+	            // En caso de excepcion se usan valores predeterminados
+	            System.err.println("Failed to load properties file. Using default configuration. " + e.getMessage());
+	            dbHost = DEFAULT_DB_HOST;
+	            dbPort = DEFAULT_DB_PORT;
+	            dbName = DEFAULT_DB_NAME;
+	            dbUser = DEFAULT_DB_USER;
+	            dbPassword = DEFAULT_DB_PASSWORD;
+	        }
+	    }
+	    
+	    /**
+	     * Encripta una contraseña dada usando el algoritmo AES.
+	     * 
+	     * @param plainPassword la contraseña en texto plano.
+	     * @return la contraseña encriptada en formato Base64.
+	     */
+	    private static String encryptPassword(String plainPassword) {
+	        try {
+	            SecretKeySpec secretKey = new SecretKeySpec(ENCRYPTION_KEY.getBytes(), ALGORITHM);
+	            Cipher cipher = Cipher.getInstance(ALGORITHM);
+	            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+	            byte[] encryptedBytes = cipher.doFinal(plainPassword.getBytes());
+	            return Base64.getEncoder().encodeToString(encryptedBytes);
+	        } catch (Exception e) {
+	            System.err.println("Failed to encrypt password. Returning plain password. " + e.getMessage());
+	            return plainPassword;
+	        }
+	    }
+	    
+	    /**
+	     * Desencripta una contraseña encriptada usando el algoritmo AES.
+	     * 
+	     * @param encryptedPassword la contraseña encriptada en formato Base64.
+	     * @return la contraseña desencriptada en texto plano.
+	     */
+	    private static String decryptPassword(String encryptedPassword) {
+	        try {
+	            SecretKeySpec secretKey = new SecretKeySpec(ENCRYPTION_KEY.getBytes(), ALGORITHM);
+	            Cipher cipher = Cipher.getInstance(ALGORITHM);
+	            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+	            byte[] decodedBytes = Base64.getDecoder().decode(encryptedPassword);
+	            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
+	            return new String(decryptedBytes);
+	        } catch (Exception e) {
+	            System.err.println("Failed to decrypt password. Using default password." + e.getMessage());
+	            return DEFAULT_DB_PASSWORD;
+	        }
+	    }
+	    
+	    /**
+	     * Método principal para pruebas. Genera una contraseña encriptada y muestra las propiedades cargadas.
+	     * 
+	     * @param args argumentos de la línea de comandos (no utilizados).
+	     */
+	    public static void main(String[] args) {
+	    	//use this short app to get a encrypted password equivalent
+	    	System.out.println("Encripted password: " + encryptPassword("maven1234X"));
+	    	System.out.println("Properties readen:");
+	    	System.out.println("\thost: " + getDbHost());
+	    	System.out.println("\tport: " + getDbPort());
+	    	System.out.println("\tdata base name: " + getDbName());
+	    	System.out.println("\tuser: " + getDbUser());
+	    	System.out.println("\tpassword: " + getDbPassword());
+	    }
+}

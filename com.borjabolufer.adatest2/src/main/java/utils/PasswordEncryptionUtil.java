@@ -1,0 +1,56 @@
+package utils;
+
+import java.util.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+
+/**
+ * Clase encargada de encriptar y desencriptar contraseñas
+ */
+public class PasswordEncryptionUtil {
+	
+	// Clave y algoritmo para la encriptación de contraseñas
+		private static final String ENCRYPTION_KEY = "MySuperSecretKey";
+		private static final String ALGORITHM = "AES";
+		
+		
+	/**
+     * Encripta una contraseña dada usando el algoritmo AES.
+     * 
+     * @param plainPassword la contraseña en texto plano.
+     * @return la contraseña encriptada en formato Base64.
+     */
+    protected String encryptPassword(String plainPassword) {
+        try {
+            SecretKeySpec secretKey = new SecretKeySpec(ENCRYPTION_KEY.getBytes(), ALGORITHM);
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            byte[] encryptedBytes = cipher.doFinal(plainPassword.getBytes());
+            return Base64.getEncoder().encodeToString(encryptedBytes);
+        } catch (Exception e) {
+            System.err.println("Failed to encrypt password. Returning plain password. " + e.getMessage());
+            return plainPassword;
+        }
+    }
+    
+    /**
+     * Desencripta una contraseña encriptada usando el algoritmo AES.
+     * 
+     * @param encryptedPassword la contraseña encriptada en formato Base64.
+     * @return la contraseña desencriptada en texto plano.
+     */
+    protected String decryptPassword(String encryptedPassword) {
+        try {
+            SecretKeySpec secretKey = new SecretKeySpec(ENCRYPTION_KEY.getBytes(), ALGORITHM);
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            byte[] decodedBytes = Base64.getDecoder().decode(encryptedPassword);
+            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
+            return new String(decryptedBytes);
+        } catch (Exception e) {
+            String errMessage ="Failed to decrypt password. Using default password." + e.getMessage();
+            return errMessage;
+        }
+    }
+}

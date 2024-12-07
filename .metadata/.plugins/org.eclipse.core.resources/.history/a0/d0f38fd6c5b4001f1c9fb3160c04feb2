@@ -1,0 +1,49 @@
+package managers;
+
+
+
+import java.util.Iterator;
+import java.util.List;
+
+import interfaces.IDAO;
+import models.POI;
+
+
+public class POIManagment{
+	private final IDAO sourceDAO;
+    private final IDAO targetDAO;
+    
+    public POIManagment(IDAO sourceDAO, IDAO targetDAO) {
+    	this.sourceDAO = sourceDAO;
+    	this.targetDAO = targetDAO;
+	}
+    
+
+	public boolean synchronizeDatabases() {
+		try {
+			// Obtiene todos los POIs desde la base de datos fuente
+			List<POI> sourcePois = sourceDAO.listAllPois();
+			
+			//Itera sobre cada POI para sincronizarlo con la base de datos destino
+			for(POI poi : sourcePois) {
+                // Verifica si el POI ya existe en la base de datos destino
+				POI existingPoi = targetDAO.listByID(poi.getId());
+				
+				if (existingPoi == null) {
+					//Si no existe agregar poi al destino
+					targetDAO.addPoi(poi);
+				}else {
+					//Si existe, actualzar el POI con los datos más recientes
+					targetDAO.updateById(poi.getId(), poi);
+				}
+			}
+			return true;
+		} catch (Exception e) {
+			 // Maneja cualquier excepción y devuelve false en caso de error
+            System.err.println("Error during synchronization: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+		}
+	}
+
+}

@@ -1,0 +1,218 @@
+package ui;
+
+import models.*;
+import java.text.SimpleDateFormat;
+import java.util.List;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.xpath.XPathExpressionException;
+
+import org.xml.sax.SAXException;
+
+import DAO.*;
+import lib.ConsoleMenu;
+import lib.LibIO;
+import managers.POIManagment;
+
+public class Main {
+    public static void main(String[] args) {
+        try {
+            int option = menuPrincipal();
+            processMenuOption(option);
+        } catch (Exception e) {
+            System.err.println("An error occurred: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            MongoConnection.closeConnection(); // Cerrar conexión MongoDB
+        }
+    }
+
+    // Menú principal
+    private static int menuPrincipal() {
+        System.out.println("=== GESTIÓN DE PUNTOS DE INTERÉS ===");
+
+        ConsoleMenu menu = new ConsoleMenu("Choose an option");
+        menu.addOpcion("Add POIs");
+        menu.addOpcion("List POIs");
+        menu.addOpcion("Remove POI by ID");
+        menu.addOpcion("Remove POI by Author");
+
+        return menu.mostrarMenu();
+    }
+
+    // Procesar opciones del menú principal
+    private static void processMenuOption(int option) {
+        do {
+            switch (option) {
+                case 1:
+                    System.out.println("=== Add POIs ===");
+                    processAddPOI();
+                    break;
+
+                case 2:
+                    System.out.println("=== List POIs ===");
+                    processListPOIs();
+                    break;
+
+                case 3:
+                    System.out.println("=== Remove POI by ID ===");
+                    removePOIById();
+                    break;
+
+                case 4:
+                    System.out.println("=== Remove POI by Author ===");
+                    removePOIByAuthor();
+                    break;
+
+                case 0:
+                    System.out.println("Exiting the program...");
+                    return;
+
+                default:
+                    System.out.println("Invalid option. Please select a valid option.");
+            }
+
+            if (option != 0) {
+                option = menuPrincipal(); // Volver al menú principal
+            }
+        } while (option != 0);
+    }
+
+    // Procesar la opción de añadir POIs
+    private static void processAddPOI() {
+        boolean continueAdding = true;
+
+        while (continueAdding) {
+            try {
+                System.out.println("=== Añadir Nuevo POI ===");
+
+                int id = LibIO.solicitarInt("Introduce el ID del POI (0 para terminar): ", 0, Integer.MAX_VALUE);
+                if (id == 0) break;
+
+                if (!POIManagment.isIDAvailable(id)) {
+                    System.out.println("Error: Ya existe un POI con este ID.");
+                    continue;
+                }
+
+                Float latitude = LibIO.solicitarFloat("Introduce la latitud: ", 2, 100);
+                Float longitude = LibIO.solicitarFloat("Introduce la longitud: ", 2, 100);
+                String city = LibIO.solicitarString("Introduce la ciudad: ", 2, 100);
+                String country = LibIO.solicitarString("Introduce el país: ", 2, 100);
+                java.util.Date publishDate = LibIO.solicitarFechaDate(
+                        "Introduce la fecha de publicación (yyyy-MM-dd): ",
+                        new SimpleDateFormat("yyyy-MM-dd"));
+                String description = LibIO.solicitarString("Introduce la descripción: ", 0, 500);
+                
+
+                boolean success = POIManagment.savePOI(id, latitude, longitude, city, country, description, publishDate);
+                if (success) {
+                    System.out.println("POI añadido correctamente.");
+                } else {
+                    System.err.println("Error añadiendo el POI.");
+                }
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+            }
+        }
+    }
+
+    // Procesar la opción de listar POIs
+    private static void processListPOIs() {
+        int subOption = subMenuListas();
+        switch (subOption) {
+            case 1:
+                System.out.println("=== List All POIs ===");
+                //System.out.println(allPOIs());
+                break;
+
+            case 2:
+                System.out.println("=== Filter by ID (LIKE) ===");
+                String partialId = LibIO.solicitarString("Introduce parte del ID a buscar: ", 1, 100);
+                //System.out.println(getPOIsByIDPartial(partialId));
+                break;
+
+            case 3:
+                System.out.println("=== Filter by IDs Range ===");
+                int min = LibIO.solicitarInt("Introduce el ID mínimo: ", 0, Integer.MAX_VALUE);
+                int max = LibIO.solicitarInt("Introduce el ID máximo: ", 0, Integer.MAX_VALUE);
+                //System.out.println(getPOIsByIDRange(min, max));
+                break;
+
+            case 4:
+                System.out.println("=== Filter by City ===");
+                String city = LibIO.solicitarString("Introduce la ciudad: ", 1, 100);
+                //System.out.println(getPOIsByCity(city));
+                break;
+
+            case 0:
+                System.out.println("Returning to the main menu...");
+                break;
+
+            default:
+                System.out.println("Invalid sub-menu option.");
+        }
+    }
+
+    // Submenú para listar POIs
+    private static int subMenuListas() {
+        ConsoleMenu menu = new ConsoleMenu("Filter Menu");
+        menu.addOpcion("List all POIs");
+        menu.addOpcion("Filter by ID (LIKE)");
+        menu.addOpcion("Filter by IDs range");
+        menu.addOpcion("Filter by city");
+        return menu.mostrarMenu();
+    }
+
+//    // Eliminar POIs por ID
+//    private static void removePOIById() {
+//        int id = LibIO.solicitarInt("Introduce el ID del POI a eliminar: ", 0, Integer.MAX_VALUE);
+//        try {
+//            System.out.println("POI eliminado: " + deletePOIByID(id));
+//        } catch (NullPointerException e) {
+//            System.err.println("No se encontró un POI con el ID especificado.");
+//        }
+//    }
+//
+//    // Eliminar POIs por autor
+//    private static void removePOIByAuthor() {
+//        String author = LibIO.solicitarString("Introduce el autor de los POIs a eliminar: ", 1, 100);
+//        try {
+//            System.out.println("POIs eliminados: " + deletePOIsByAuthor(author));
+//        } catch (Exception e) {
+//            System.err.println("No se encontraron POIs del autor especificado.");
+//        }
+//    }
+
+//    // Métodos de DAO (operaciones CRUD con POI)
+//    public static String allPOIs() {
+//        List<POI> pois = poiDao.getAllPOIs();
+//        return pois.toString();
+//    }
+//
+//    public static String getPOIsByIDPartial(String partialId) {
+//        List<POI> pois = poiDao.getPOIsByIDPartial(partialId);
+//        return pois.toString();
+//    }
+//
+//    public static String getPOIsByIDRange(int min, int max) {
+//        List<POI> pois = poiDao.getPOIsByIDRange(min, max);
+//        return pois.toString();
+//    }
+//
+//    public static String getPOIsByCity(String city) {
+//        List<POI> pois = poiDao.getPOIsByCity(city);
+//        return pois.toString();
+//    }
+//
+//    public static String deletePOIByID(int id) {
+//        POI poi = poiDao.deletePOIById(id);
+//        return poi.toString();
+//    }
+//
+//    public static String deletePOIsByAuthor(String author) {
+//        List<POI> pois = poiDao.deletePOIsByAuthor(author);
+//        return pois.toString();
+//    }
+}

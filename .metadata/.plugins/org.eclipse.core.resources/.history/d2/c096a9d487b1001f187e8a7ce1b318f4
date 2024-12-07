@@ -1,0 +1,90 @@
+import;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class ConsoleMenu {
+    private String title;
+    private ArrayList<Option> options;
+    private Scanner scanner;
+
+    public ConsoleMenu() {
+        this.options = new ArrayList<>();
+        this.scanner = new Scanner(System.in);
+    }
+
+    public void addTitle(String title) {
+        this.title = title;
+    }
+
+    // Método original que acepta lambdas
+    public void addOption(String text, Runnable action) {
+        options.add(new Option(text, action));
+    }
+
+    // Nuevo método que acepta referencias a métodos
+    public void addOption(String text, MenuAction action) {
+        options.add(new Option(text, action::execute));
+    }
+
+    public void run() {
+        boolean exit = false;
+        while (!exit) {
+            printMenu();
+            int option = readOption();
+            
+            if (option == options.size() + 1) {
+                exit = true;
+            } else if (option >= 1 && option <= options.size()) {
+                options.get(option - 1).execute();
+            }
+        }
+    }
+
+    private void printMenu() {
+        System.out.println("\n" + title);
+        for (int i = 0; i < options.size(); i++) {
+            System.out.printf("%d. %s\n", i + 1, options.get(i).getText());
+        }
+        System.out.printf("%d. Salir\n", options.size() + 1);
+    }
+
+    private int readOption() {
+        while (true) {
+            try {
+                System.out.print("Seleccione una opción: ");
+                int option = Integer.parseInt(scanner.nextLine());
+                if (option >= 1 && option <= options.size() + 1) {
+                    return option;
+                }
+            } catch (NumberFormatException e) {
+                // No hacer nada, continuará el bucle
+            }
+            System.out.println("Opción no válida");
+        }
+    }
+
+    // Interfaz funcional para los métodos de menú
+    @FunctionalInterface
+    public interface MenuAction {
+        void execute();
+    }
+
+    // Clase interna para representar las opciones
+    private class Option {
+        private String text;
+        private Runnable action;
+
+        public Option(String text, Runnable action) {
+            this.text = text;
+            this.action = action;
+        }
+
+        public String getText() {
+            return text;
+        }
+
+        public void execute() {
+            action.run();
+        }
+    }
+}

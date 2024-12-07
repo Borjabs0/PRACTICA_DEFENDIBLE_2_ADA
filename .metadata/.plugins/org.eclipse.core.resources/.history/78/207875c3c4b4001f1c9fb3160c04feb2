@@ -1,0 +1,36 @@
+package managers;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import models.POI;
+
+public class POIManagment {
+
+//	public static boolean savePOI(int id, float latitude, float longitude, String city, String country,
+//	        Date publishDate, String description) {
+//	    if (id <= 0 || latitude == 0 || longitude == 0 || city == null || country == null || publishDate == null || description == null) {
+//	        return false; // Datos inválidos
+//	    }
+//
+//	    // Crear el objeto POI con los datos proporcionados
+//	    POI poi = new POI(id, latitude, longitude, city, country, description, publishDate);
+//
+//	    // Guardar el POI utilizando el DAO y devolver el resultado
+//	    return true;
+//	}
+	
+	public static boolean isIDAvailable(int id) {
+		List<POI> pois = new ArrayList<POI>();
+		for(POI poi : pois) {
+			if (id == poi.getId()) {
+				System.out.println("Ya existe un poy con este id");
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+}
